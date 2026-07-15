@@ -1,12 +1,15 @@
 /**
- * HTTP client for Ghar Seva API (JWT in localStorage)
+ * Ghar Seva API client — JWT in localStorage
+ * Endpoints mirror backend/API.md
  */
 (function () {
   const TOKEN_KEY = 'ghar_seva_token';
   const USER_KEY = 'ghar_seva_user';
 
   function getBase() {
-    return (window.APP_CONFIG && window.APP_CONFIG.API_BASE) || 'http://localhost:4000';
+    const base =
+      (window.APP_CONFIG && window.APP_CONFIG.API_BASE) || 'http://localhost:4000';
+    return String(base).replace(/\/$/, '');
   }
 
   function getToken() {
@@ -35,6 +38,7 @@
   async function request(path, options = {}) {
     const headers = {
       'Content-Type': 'application/json',
+      Accept: 'application/json',
       ...(options.headers || {}),
     };
 
@@ -47,9 +51,9 @@
         ...options,
         headers,
       });
-    } catch (err) {
+    } catch {
       const error = new Error(
-        'Cannot reach the server. Check your connection and that the API is running.'
+        'Cannot reach the server. Check API_BASE_URL / that the Render service is Live.'
       );
       error.network = true;
       throw error;
@@ -66,10 +70,14 @@
     }
 
     if (!res.ok) {
-      if (res.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/signup')) {
+      const isAuthForm =
+        path.includes('/auth/login') || path.includes('/auth/signup');
+      if (res.status === 401 && !isAuthForm) {
         clearSession();
       }
-      const error = new Error((body && body.error) || `Request failed (${res.status})`);
+      const error = new Error(
+        (body && (body.error || body.message)) || `Request failed (${res.status})`
+      );
       error.status = res.status;
       error.body = body;
       throw error;
@@ -85,6 +93,15 @@
     clearSession,
     getBase,
 
+    // —— System ——
+    health() {
+      return request('/health');
+    },
+    apiInfo() {
+      return request('/');
+    },
+
+    // —— Auth ——
     async signup({ name, email, phone, password, location }) {
       const data = await request('/api/auth/signup', {
         method: 'POST',
@@ -109,6 +126,15 @@
       return data;
     },
 
+    async updateProfile(fields) {
+      const data = await request('/api/auth/me', {
+        method: 'PATCH',
+        body: JSON.stringify(fields),
+      });
+      if (data.user) localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      return data;
+    },
+
     async updateLocation(location) {
       const data = await request('/api/auth/me/location', {
         method: 'PATCH',
@@ -118,19 +144,47 @@
       return data;
     },
 
-    async createBooking(payload) {
+    async logout() {
+      try {
+        if (getToken()) await request('/api/auth/logout', { method: 'POST' });
+      } catch {
+        /* ignore network on logout */
+      }
+      clearSession();
+    },
+
+    // —— Catalog ——
+    listServices() {
+      return request('/api/services');
+    },
+    getService(id) {
+      return request(`/api/services/${encodeURIComponent(id)}`);
+    },
+    getMeta() {
+      return request('/api/meta');
+    },
+
+    // —— Bookings ——
+    listBookings(status) {
+      const q = status ? `?status=${encodeURIComponent(status)}` : '';
+      return request(`/api/bookings${q}`);
+    },
+    getBooking(id) {
+      return request(`/api/bookings/${encodeURIComponent(id)}`);
+    },
+    getBookingByCode(code) {
+      return request(`/api/bookings/code/${encodeURIComponent(code)}`);
+    },
+    createBooking(payload) {
       return request('/api/bookings', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
     },
-
-    async listBookings() {
-      return request('/api/bookings');
-    },
-
-    async health() {
-      return request('/health');
+    cancelBooking(id) {
+      return request(`/api/bookings/${encodeURIComponent(id)}/cancel`, {
+        method: 'PATCH',
+      });
     },
   };
 })();

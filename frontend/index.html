@@ -1148,8 +1148,8 @@
       document.getElementById('user-location').textContent = state.location;
     }
 
-    function logout() {
-      API.clearSession();
+    async function logout() {
+      await API.logout();
       state.user = null;
       document.getElementById('auth-form').reset();
       setAuthMode('login');

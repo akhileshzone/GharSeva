@@ -2,12 +2,17 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
+import {
+  getServiceById,
+  TIME_SLOTS,
+  VISIT_FEE_PAISE,
+} from '../data/catalog.js';
 
 const router = Router();
 
 const createBookingSchema = z.object({
   serviceId: z.string().min(1),
-  serviceName: z.string().min(1).max(120),
+  serviceName: z.string().min(1).max(120).optional(),
   address: z.string().trim().min(3).max(300),
   city: z.string().trim().min(2).max(100),
   pincode: z.string().trim().regex(/^\d{6}$/, 'PIN code must be 6 digits'),
@@ -34,9 +39,10 @@ function serializeBooking(b) {
     pincode: b.pincode,
     propertyType: b.propertyType,
     notes: b.notes,
-    visitDate: b.visitDate instanceof Date
-      ? b.visitDate.toISOString().slice(0, 10)
-      : b.visitDate,
+    visitDate:
+      b.visitDate instanceof Date
+        ? b.visitDate.toISOString().slice(0, 10)
+        : b.visitDate,
     visitTime: b.visitTime,
     paymentMethod: b.paymentMethod,
     amountPaise: b.amountPaise,
@@ -44,24 +50,55 @@ function serializeBooking(b) {
     paymentStatus: b.paymentStatus,
     status: b.status,
     createdAt: b.createdAt,
+    updatedAt: b.updatedAt,
   };
 }
 
 router.use(requireAuth);
 
+/** GET /api/bookings — list my bookings */
 router.get('/', async (req, res) => {
   try {
+    const status = req.query.status;
+    const where = { userId: req.user.id };
+    if (status && typeof status === 'string') {
+      where.status = status;
+    }
+
     const bookings = await prisma.booking.findMany({
-      where: { userId: req.user.id },
+      where,
       orderBy: { createdAt: 'desc' },
     });
-    res.json({ bookings: bookings.map(serializeBooking) });
+    res.json({
+      count: bookings.length,
+      bookings: bookings.map(serializeBooking),
+    });
   } catch (err) {
     console.error('list bookings error:', err);
     res.status(500).json({ error: 'Could not load bookings' });
   }
 });
 
+/** GET /api/bookings/code/:code — lookup by booking code */
+router.get('/code/:code', async (req, res) => {
+  try {
+    const booking = await prisma.booking.findFirst({
+      where: {
+        bookingCode: req.params.code.toUpperCase(),
+        userId: req.user.id,
+      },
+    });
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    res.json({ booking: serializeBooking(booking) });
+  } catch (err) {
+    console.error('get booking by code error:', err);
+    res.status(500).json({ error: 'Could not load booking' });
+  }
+});
+
+/** GET /api/bookings/:id */
 router.get('/:id', async (req, res) => {
   try {
     const booking = await prisma.booking.findFirst({
@@ -77,6 +114,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/** POST /api/bookings — create booking after ₹199 payment UI */
 router.post('/', async (req, res) => {
   try {
     const parsed = createBookingSchema.safeParse(req.body);
@@ -88,6 +126,16 @@ router.post('/', async (req, res) => {
     }
 
     const data = parsed.data;
+    const catalogService = getServiceById(data.serviceId);
+    const serviceName =
+      data.serviceName || catalogService?.name || data.serviceId;
+
+    if (!TIME_SLOTS.includes(data.visitTime)) {
+      return res.status(400).json({
+        error: `Invalid time slot. Use one of: ${TIME_SLOTS.join(', ')}`,
+      });
+    }
+
     const visitDate = new Date(data.visitDate + 'T12:00:00.000Z');
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
@@ -99,7 +147,6 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Visit date cannot be in the past' });
     }
 
-    // Retry on rare bookingCode collision
     let booking = null;
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
@@ -108,7 +155,7 @@ router.post('/', async (req, res) => {
             bookingCode: generateBookingCode(),
             userId: req.user.id,
             serviceId: data.serviceId,
-            serviceName: data.serviceName,
+            serviceName,
             address: data.address,
             city: data.city,
             pincode: data.pincode,
@@ -117,7 +164,7 @@ router.post('/', async (req, res) => {
             visitDate,
             visitTime: data.visitTime,
             paymentMethod: data.paymentMethod,
-            amountPaise: 19900,
+            amountPaise: VISIT_FEE_PAISE,
             paymentStatus: 'paid',
             status: 'confirmed',
           },
@@ -133,10 +180,41 @@ router.post('/', async (req, res) => {
       return res.status(500).json({ error: 'Could not generate booking code' });
     }
 
-    res.status(201).json({ booking: serializeBooking(booking) });
+    res.status(201).json({
+      message: 'Booking confirmed',
+      booking: serializeBooking(booking),
+    });
   } catch (err) {
     console.error('create booking error:', err);
     res.status(500).json({ error: 'Could not create booking' });
+  }
+});
+
+/** PATCH /api/bookings/:id/cancel */
+router.patch('/:id/cancel', async (req, res) => {
+  try {
+    const existing = await prisma.booking.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+    if (!existing) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    if (existing.status === 'cancelled') {
+      return res.status(400).json({ error: 'Booking is already cancelled' });
+    }
+
+    const booking = await prisma.booking.update({
+      where: { id: existing.id },
+      data: { status: 'cancelled' },
+    });
+
+    res.json({
+      message: 'Booking cancelled',
+      booking: serializeBooking(booking),
+    });
+  } catch (err) {
+    console.error('cancel booking error:', err);
+    res.status(500).json({ error: 'Could not cancel booking' });
   }
 });
 

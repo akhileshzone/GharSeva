@@ -20,6 +20,7 @@
       injected ||
       (isLocal
         ? 'http://localhost:4000'
-        : 'https://YOUR-RENDER-SERVICE.onrender.com'),
+        // Set Netlify env API_BASE_URL, or replace with your Render URL:
+        : 'https://YOUR-API.onrender.com'),
   };
 })();

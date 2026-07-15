@@ -34,6 +34,13 @@ const locationSchema = z.object({
   location: z.string().trim().min(2).max(120),
 });
 
+const profileSchema = z.object({
+  name: z.string().trim().min(2).max(100).optional(),
+  phone: z.string().trim().min(10).max(15).optional().or(z.literal('')),
+  location: z.string().trim().min(2).max(120).optional(),
+});
+
+/** POST /api/auth/signup */
 router.post('/signup', async (req, res) => {
   try {
     const parsed = signupSchema.safeParse(req.body);
@@ -64,6 +71,7 @@ router.post('/signup', async (req, res) => {
 
     const token = signToken({ sub: user.id, email: user.email });
     res.status(201).json({
+      message: 'Account created',
       token,
       user: publicUser(user),
     });
@@ -73,6 +81,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
+/** POST /api/auth/login */
 router.post('/login', async (req, res) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
@@ -96,6 +105,7 @@ router.post('/login', async (req, res) => {
 
     const token = signToken({ sub: user.id, email: user.email });
     res.json({
+      message: 'Logged in',
       token,
       user: publicUser(user),
     });
@@ -105,10 +115,43 @@ router.post('/login', async (req, res) => {
   }
 });
 
+/** GET /api/auth/me — current user (Bearer token) */
 router.get('/me', requireAuth, async (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
+/** PATCH /api/auth/me — update profile fields */
+router.patch('/me', requireAuth, async (req, res) => {
+  try {
+    const parsed = profileSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: parsed.error.errors[0]?.message || 'Invalid profile data',
+      });
+    }
+
+    const data = {};
+    if (parsed.data.name !== undefined) data.name = parsed.data.name;
+    if (parsed.data.phone !== undefined) data.phone = parsed.data.phone || null;
+    if (parsed.data.location !== undefined) data.location = parsed.data.location;
+
+    if (!Object.keys(data).length) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data,
+    });
+
+    res.json({ message: 'Profile updated', user: publicUser(user) });
+  } catch (err) {
+    console.error('profile update error:', err);
+    res.status(500).json({ error: 'Could not update profile' });
+  }
+});
+
+/** PATCH /api/auth/me/location */
 router.patch('/me/location', requireAuth, async (req, res) => {
   try {
     const parsed = locationSchema.safeParse(req.body);
@@ -126,6 +169,11 @@ router.patch('/me/location', requireAuth, async (req, res) => {
     console.error('location update error:', err);
     res.status(500).json({ error: 'Could not update location' });
   }
+});
+
+/** POST /api/auth/logout — client discards token; endpoint for symmetry */
+router.post('/logout', requireAuth, (_req, res) => {
+  res.json({ message: 'Logged out. Discard the token on the client.' });
 });
 
 export default router;

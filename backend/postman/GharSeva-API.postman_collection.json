@@ -1,0 +1,149 @@
+{
+  "info": {
+    "name": "Ghar Seva API",
+    "description": "Complete Ghar Seva auth + services + bookings API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Root",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/" }
+        },
+        {
+          "name": "Health",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/health" }
+        },
+        {
+          "name": "API Index",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api" }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.token) pm.collectionVariables.set('token', j.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"secret12\",\n  \"location\": \"Hyderabad, Telangana\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/signup"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.token) pm.collectionVariables.set('token', j.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"secret12\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User Updated\",\n  \"phone\": \"9876543210\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "List Services",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/services" }
+        },
+        {
+          "name": "Get Service",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/services/plumbing" }
+        },
+        {
+          "name": "Meta",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/meta" }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"plumbing\",\n  \"address\": \"12 MG Road\",\n  \"city\": \"Hyderabad\",\n  \"pincode\": \"500001\",\n  \"propertyType\": \"Apartment / Flat\",\n  \"notes\": \"Leak test\",\n  \"visitDate\": \"2026-08-01\",\n  \"visitTime\": \"10:00 AM\",\n  \"paymentMethod\": \"upi\"\n}"
+            },
+            "url": "{{baseUrl}}/api/bookings"
+          }
+        },
+        {
+          "name": "List Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/bookings"
+          }
+        }
+      ]
+    }
+  ]
+}
