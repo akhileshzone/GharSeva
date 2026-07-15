@@ -1,0 +1,19 @@
+# Local PostgreSQL for development
+# Usage: docker compose up -d
+# Then set backend/.env DATABASE_URL to the value below
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: gharseva
+      POSTGRES_PASSWORD: gharseva
+      POSTGRES_DB: gharseva
+    volumes:
+      - gharseva_pg:/var/lib/postgresql/data
+
+volumes:
+  gharseva_pg:

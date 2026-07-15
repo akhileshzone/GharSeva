@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  phone        String?
+  passwordHash String
+  location     String    @default("Hyderabad, Telangana")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  bookings     Booking[]
+
+  @@index([email])
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  bookingCode   String   @unique
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  serviceId     String
+  serviceName   String
+
+  address       String
+  city          String
+  pincode       String
+  propertyType  String
+  notes         String?
+
+  visitDate     DateTime @db.Date
+  visitTime     String
+
+  paymentMethod String
+  amountPaise   Int      @default(19900)
+  paymentStatus String   @default("paid")
+
+  status        String   @default("confirmed")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([bookingCode])
+}

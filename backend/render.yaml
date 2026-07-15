@@ -1,0 +1,30 @@
+# Render Blueprint — API + PostgreSQL
+# Dashboard: New > Blueprint > connect this repo, or create services manually (see DEPLOY.md)
+
+services:
+  - type: web
+    name: ghar-seva-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install && npx prisma generate && npx prisma db push
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ghar-seva-db
+          property: connectionString
+      - key: CORS_ORIGINS
+        sync: false
+        # Set after Netlify deploy, e.g. https://your-site.netlify.app
+
+databases:
+  - name: ghar-seva-db
+    plan: free
+    databaseName: gharseva
+    user: gharseva

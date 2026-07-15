@@ -1,0 +1,12 @@
+{
+  "name": "ghar-seva",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ghar Seva — construction & repair booking (Netlify + Render)",
+  "scripts": {
+    "dev:api": "npm --prefix backend run dev",
+    "dev:db": "docker compose up -d",
+    "db:push": "npm --prefix backend run db:push",
+    "install:all": "npm --prefix backend install"
+  }
+}

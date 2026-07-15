@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ghar Seva — Construction & Repair Booking</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              50: '#eef3f9',
+              100: '#d5e1f0',
+              200: '#abc3e1',
+              300: '#7a9fc9',
+              400: '#4f7aad',
+              500: '#365f93',
+              600: '#2a4a75',
+              700: '#1e3a5f',
+              800: '#152a45',
+              900: '#0f1f33',
+              950: '#0a1422',
+            },
+            amber: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+            }
+          },
+          fontFamily: {
+            sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+            display: ['"Outfit"', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 4px 24px -4px rgba(15, 31, 51, 0.08), 0 2px 8px -2px rgba(15, 31, 51, 0.04)',
+            'card-hover': '0 12px 40px -8px rgba(15, 31, 51, 0.14), 0 4px 12px -4px rgba(15, 31, 51, 0.06)',
+            'glow': '0 0 0 3px rgba(245, 158, 11, 0.25)',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; }
+    .font-display { font-family: 'Outfit', system-ui, sans-serif; }
+
+    .screen { display: none; animation: fadeIn 0.35s ease; }
+    .screen.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes checkPop {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .modal-backdrop {
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-panel {
+      animation: slideUp 0.3s ease;
+    }
+    .success-check {
+      animation: checkPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+    }
+
+    .service-card {
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .service-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px -8px rgba(15, 31, 51, 0.14);
+    }
+    .service-card:active {
+      transform: translateY(-1px);
+    }
+
+    .step-dot {
+      transition: all 0.3s ease;
+    }
+    .step-line {
+      transition: background-color 0.4s ease;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: #365f93;
+      box-shadow: 0 0 0 3px rgba(54, 95, 147, 0.15);
+    }
+
+    .btn-primary {
+      transition: all 0.2s ease;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px -4px rgba(30, 58, 95, 0.4);
+    }
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    .btn-primary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .time-slot {
+      transition: all 0.15s ease;
+    }
+    .time-slot.selected {
+      background: #1e3a5f;
+      color: white;
+      border-color: #1e3a5f;
+    }
+    .time-slot:hover:not(.selected):not(:disabled) {
+      border-color: #365f93;
+      background: #eef3f9;
+    }
+    .time-slot:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .dropdown-menu {
+      animation: scaleIn 0.15s ease;
+      transform-origin: top right;
+    }
+
+    .auth-toggle-btn {
+      transition: all 0.2s ease;
+    }
+
+    /* Custom date input styling */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.6;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #abc3e1; border-radius: 3px; }
+
+    .gradient-mesh {
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(54, 95, 147, 0.12), transparent),
+        radial-gradient(ellipse 60% 40% at 90% 10%, rgba(245, 158, 11, 0.08), transparent),
+        #f8fafc;
+    }
+
+    .hero-pattern {
+      background-image:
+        linear-gradient(rgba(15, 31, 51, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 31, 51, 0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+  <!-- ========== AUTH SCREEN ========== -->
+  <div id="screen-auth" class="screen active min-h-screen">
+    <div class="min-h-screen flex flex-col lg:flex-row">
+      <!-- Brand panel -->
+      <div class="relative lg:w-[48%] bg-navy-900 text-white overflow-hidden">
+        <div class="absolute inset-0 opacity-30">
+          <div class="absolute top-0 right-0 w-96 h-96 bg-navy-600 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+          <div class="absolute bottom-0 left-0 w-80 h-80 bg-amber-600/40 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+        </div>
+        <div class="relative z-10 flex flex-col justify-between h-full min-h-[280px] lg:min-h-screen p-8 lg:p-12">
+          <div>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg">
+                <svg class="w-6 h-6 text-navy-950" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
+                </svg>
+              </div>
+              <span class="font-display text-2xl font-bold tracking-tight">Manam Homes</span>
+            </div>
+            <p class="text-navy-200 text-sm ml-14">Build · Repair · Trust</p>
+          </div>
+
+          <div class="hidden lg:block py-12">
+            <h1 class="font-display text-4xl xl:text-5xl font-bold leading-tight mb-6">
+              Expert construction<br/>
+              <span class="text-amber-400">& repair</span>, booked<br/>
+              in minutes.
+            </h1>
+            <p class="text-navy-200 text-lg max-w-md leading-relaxed mb-10">
+              From full house builds to plumbing fixes — book a certified on-site expert visit for just ₹199.
+            </p>
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="mt-0.5 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-white">New builds & existing repairs</p>
+                  <p class="text-sm text-navy-300">One platform for construction and home maintenance</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="mt-0.5 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-white">₹199 on-site expert visit</p>
+                  <p class="text-sm text-navy-300">Inspection, budget estimate & area assessment</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="mt-0.5 w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-white">Vetted professionals</p>
+                  <p class="text-sm text-navy-300">Licensed engineers, masons & technicians</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="hidden lg:block text-navy-400 text-xs">© 2026 Manam Homes. Trusted by homeowners across India.</p>
+        </div>
+      </div>
+
+      <!-- Auth form panel -->
+      <div class="flex-1 flex items-center justify-center p-6 sm:p-10 gradient-mesh">
+        <div class="w-full max-w-md">
+          <div class="lg:hidden mb-8 text-center">
+            <h2 class="font-display text-2xl font-bold text-navy-900">Welcome</h2>
+            <p class="text-slate-500 text-sm mt-1">Book expert construction & repair visits</p>
+          </div>
+
+          <!-- Toggle -->
+          <div class="bg-white rounded-2xl shadow-card border border-slate-100 p-1.5 flex mb-8">
+            <button type="button" id="tab-signup" class="auth-toggle-btn flex-1 py-2.5 rounded-xl text-sm font-semibold bg-navy-800 text-white shadow-sm" onclick="setAuthMode('signup')">
+              Sign Up
+            </button>
+            <button type="button" id="tab-login" class="auth-toggle-btn flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:text-navy-800" onclick="setAuthMode('login')">
+              Log In
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-card border border-slate-100 p-6 sm:p-8">
+            <h2 id="auth-title" class="font-display text-xl font-bold text-navy-900 mb-1">Create your account</h2>
+            <p id="auth-subtitle" class="text-slate-500 text-sm mb-6">Join Manam Homes to book expert visits</p>
+
+            <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-4" novalidate>
+              <!-- Signup-only fields -->
+              <div id="signup-fields" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1.5" for="auth-name">Full Name</label>
+                  <input id="auth-name" type="text" autocomplete="name" placeholder="e.g. Priya Sharma"
+                    class="input-field w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 placeholder:text-slate-400 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1.5" for="auth-phone">Phone Number</label>
+                  <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">+91</span>
+                    <input id="auth-phone" type="tel" autocomplete="tel" placeholder="98765 43210" maxlength="11"
+                      class="input-field w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 placeholder:text-slate-400 text-sm" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5" for="auth-email">Email Address</label>
+                <input id="auth-email" type="email" autocomplete="email" required placeholder="you@example.com"
+                  class="input-field w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 placeholder:text-slate-400 text-sm" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5" for="auth-password">Password</label>
+                <div class="relative">
+                  <input id="auth-password" type="password" autocomplete="current-password" required placeholder="Min. 6 characters" minlength="6"
+                    class="input-field w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 placeholder:text-slate-400 text-sm" />
+                  <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-navy-700" aria-label="Toggle password">
+                    <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <p id="auth-error" class="hidden text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></p>
+
+              <button type="submit" id="auth-submit" class="btn-primary w-full py-3.5 rounded-xl bg-navy-800 hover:bg-navy-700 text-white font-semibold text-sm shadow-md mt-2">
+                Create Account
+              </button>
+            </form>
+
+            <p class="text-center text-xs text-slate-400 mt-6">
+              By continuing, you agree to our Terms of Service and Privacy Policy.
+            </p>
+          </div>
+
+          <p class="text-center text-sm text-slate-500 mt-6 lg:hidden">
+            © 2026 Manam Homes
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== HOME SCREEN ========== -->
+  <div id="screen-home" class="screen min-h-screen gradient-mesh">
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-lg bg-navy-800 flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
+            </svg>
+          </div>
+          <span class="font-display font-bold text-navy-900 text-lg tracking-tight hidden sm:inline">Ghar Seva</span>
+        </div>
+
+        <!-- Location -->
+        <button type="button" onclick="openLocationPicker()" class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200/80 transition text-left max-w-[42%] sm:max-w-xs">
+          <svg class="w-4 h-4 text-amber-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+          </svg>
+          <span id="user-location" class="text-xs sm:text-sm font-medium text-slate-700 truncate">Hyderabad, Telangana</span>
+          <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+          </svg>
+        </button>
+
+        <!-- Profile dropdown -->
+        <div class="relative">
+          <button type="button" id="profile-btn" onclick="toggleProfileMenu()" class="flex items-center gap-2 p-1 pr-2 rounded-full hover:bg-slate-100 transition border border-transparent hover:border-slate-200">
+            <div id="user-avatar" class="w-9 h-9 rounded-full bg-navy-800 text-white flex items-center justify-center text-sm font-bold font-display">U</div>
+            <svg class="w-4 h-4 text-slate-400 hidden sm:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+            </svg>
+          </button>
+          <div id="profile-menu" class="dropdown-menu hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-card-hover border border-slate-100 py-2 z-50">
+            <div class="px-4 py-2.5 border-b border-slate-100">
+              <p id="profile-name" class="font-semibold text-navy-900 text-sm truncate">User</p>
+              <p id="profile-email" class="text-xs text-slate-500 truncate">user@example.com</p>
+            </div>
+            <button type="button" class="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+              My Profile
+            </button>
+            <button type="button" onclick="openBookingsModal()" class="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+              My Bookings
+            </button>
+            <div class="border-t border-slate-100 mt-1 pt-1">
+              <button type="button" onclick="logout()" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+      <!-- Hero -->
+      <section class="relative mt-6 sm:mt-8 rounded-2xl sm:rounded-3xl overflow-hidden bg-navy-900 text-white hero-pattern">
+        <div class="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-950"></div>
+        <div class="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl"></div>
+        <div class="relative px-6 sm:px-10 py-8 sm:py-12">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-4">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+            On-site expert visit · Only ₹199
+          </div>
+          <h1 class="font-display text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight max-w-xl mb-3">
+            New house construction<br class="hidden sm:block"/>
+            <span class="text-amber-400">& existing house repairs</span>
+          </h1>
+          <p class="text-navy-200 text-sm sm:text-base max-w-lg leading-relaxed mb-6">
+            Book a certified professional for inspection, budget estimation, and area assessment. From foundation to finishing — we've got you covered.
+          </p>
+          <div class="flex flex-wrap gap-3 text-xs sm:text-sm">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-navy-100">
+              <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
+              Vetted experts
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-navy-100">
+              <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
+              Transparent estimates
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-navy-100">
+              <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
+              Same-week slots
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dual messaging pills -->
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-100 shadow-card">
+          <div class="w-11 h-11 rounded-xl bg-navy-50 text-navy-700 flex items-center justify-center shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="font-semibold text-navy-900 text-sm">New House Construction</p>
+            <p class="text-xs text-slate-500 mt-0.5">Turnkey builds, planning & site assessment</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-100 shadow-card">
+          <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="font-semibold text-navy-900 text-sm">Existing House Repairs</p>
+            <p class="text-xs text-slate-500 mt-0.5">Fix, renovate & upgrade your current home</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Services -->
+      <section class="mt-10">
+        <div class="flex items-end justify-between mb-5">
+          <div>
+            <h2 class="font-display text-xl sm:text-2xl font-bold text-navy-900">Our Services</h2>
+            <p class="text-sm text-slate-500 mt-1">Select a service to book an on-site expert visit</p>
+          </div>
+        </div>
+
+        <div id="services-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          <!-- Cards injected by JS -->
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section class="mt-12 mb-4">
+        <h2 class="font-display text-xl font-bold text-navy-900 mb-5">How the ₹199 visit works</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="relative p-5 rounded-2xl bg-white border border-slate-100 shadow-card">
+            <span class="font-display text-3xl font-bold text-navy-100 absolute top-3 right-4">01</span>
+            <div class="w-10 h-10 rounded-xl bg-navy-800 text-amber-400 flex items-center justify-center mb-3">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+            </div>
+            <h3 class="font-semibold text-navy-900 text-sm mb-1">Book & pay ₹199</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">Choose service, share address & slot, pay the flat inspection fee.</p>
+          </div>
+          <div class="relative p-5 rounded-2xl bg-white border border-slate-100 shadow-card">
+            <span class="font-display text-3xl font-bold text-navy-100 absolute top-3 right-4">02</span>
+            <div class="w-10 h-10 rounded-xl bg-navy-800 text-amber-400 flex items-center justify-center mb-3">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="font-semibold text-navy-900 text-sm mb-1">Expert visits site</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">Inspection, measurements, and area assessment by a certified pro.</p>
+          </div>
+          <div class="relative p-5 rounded-2xl bg-white border border-slate-100 shadow-card">
+            <span class="font-display text-3xl font-bold text-navy-100 absolute top-3 right-4">03</span>
+            <div class="w-10 h-10 rounded-xl bg-navy-800 text-amber-400 flex items-center justify-center mb-3">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+            </div>
+            <h3 class="font-semibold text-navy-900 text-sm mb-1">Get budget estimate</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">Receive a clear quote. Proceed only if you're happy with the plan.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ========== BOOKING SCREEN ========== -->
+  <div id="screen-booking" class="screen min-h-screen gradient-mesh">
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
+      <div class="max-w-2xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
+        <button type="button" onclick="goBackFromBooking()" class="p-2 -ml-2 rounded-xl hover:bg-slate-100 text-slate-600 transition" aria-label="Go back">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
+          </svg>
+        </button>
+        <div class="min-w-0 flex-1">
+          <h1 class="font-display font-bold text-navy-900 text-base sm:text-lg truncate">Book Expert Visit</h1>
+          <p id="booking-service-label" class="text-xs text-slate-500 truncate">Service</p>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="text-xs text-slate-500">Visit fee</p>
+          <p class="font-display font-bold text-navy-900">₹199</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 py-6">
+      <!-- Step indicator -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between px-1">
+          <div class="flex flex-col items-center gap-1.5 flex-1">
+            <div id="step-dot-1" class="step-dot w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-navy-800 text-white">1</div>
+            <span class="text-[10px] sm:text-xs font-medium text-navy-800">Address</span>
+          </div>
+          <div id="step-line-1" class="step-line h-0.5 flex-1 bg-slate-200 mx-1 mb-5"></div>
+          <div class="flex flex-col items-center gap-1.5 flex-1">
+            <div id="step-dot-2" class="step-dot w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-slate-200 text-slate-500">2</div>
+            <span class="text-[10px] sm:text-xs font-medium text-slate-500">Schedule</span>
+          </div>
+          <div id="step-line-2" class="step-line h-0.5 flex-1 bg-slate-200 mx-1 mb-5"></div>
+          <div class="flex flex-col items-center gap-1.5 flex-1">
+            <div id="step-dot-3" class="step-dot w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-slate-200 text-slate-500">3</div>
+            <span class="text-[10px] sm:text-xs font-medium text-slate-500">Payment</span>
+          </div>
+          <div id="step-line-3" class="step-line h-0.5 flex-1 bg-slate-200 mx-1 mb-5"></div>
+          <div class="flex flex-col items-center gap-1.5 flex-1">
+            <div id="step-dot-4" class="step-dot w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-slate-200 text-slate-500">4</div>
+            <span class="text-[10px] sm:text-xs font-medium text-slate-500">Done</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step panels -->
+      <div class="bg-white rounded-2xl shadow-card border border-slate-100 p-5 sm:p-7">
+
+        <!-- STEP 1: Address -->
+        <div id="booking-step-1" class="booking-step">
+          <h2 class="font-display text-lg font-bold text-navy-900 mb-1">Property Address & Details</h2>
+          <p class="text-sm text-slate-500 mb-6">Where should our expert visit?</p>
+
+          <form id="form-step-1" class="space-y-4" onsubmit="submitStep1(event)">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5" for="addr-line">Street Address / Plot</label>
+              <input id="addr-line" type="text" required placeholder="House no., street, landmark"
+                class="input-field w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm" />
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5" for="addr-city">City</label>
+                <input id="addr-city" type="text" required placeholder="City" value="Hyderabad"
+                  class="input-field w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5" for="addr-pincode">PIN Code</label>
+                <input id="addr-pincode" type="text" required pattern="[0-9]{6}" maxlength="6" placeholder="500001"
+                  class="input-field w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5" for="addr-type">Property Type</label>
+              <select id="addr-type" required class="input-field w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm">
+                <option value="">Select type</option>
+                <option value="Independent House">Independent House</option>
+                <option value="Apartment / Flat">Apartment / Flat</option>
+                <option value="Villa">Villa</option>
+                <option value="Plot / Under Construction">Plot / Under Construction</option>
+                <option value="Commercial">Commercial</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5" for="addr-notes">Additional Details <span class="text-slate-400 font-normal">(optional)</span></label>
+              <textarea id="addr-notes" rows="3" placeholder="e.g. 2BHK, ground floor, water seepage near bathroom…"
+                class="input-field w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm resize-none"></textarea>
+            </div>
+            <button type="submit" class="btn-primary w-full py-3.5 rounded-xl bg-navy-800 hover:bg-navy-700 text-white font-semibold text-sm shadow-md mt-2">
+              Continue to Schedule
+            </button>
+          </form>
+        </div>
+
+        <!-- STEP 2: Date & Time -->
+        <div id="booking-step-2" class="booking-step hidden">
+          <h2 class="font-display text-lg font-bold text-navy-900 mb-1">Choose Visit Date & Time</h2>
+          <p class="text-sm text-slate-500 mb-6">Pick a convenient slot for our team</p>
+
+          <form id="form-step-2" class="space-y-5" onsubmit="submitStep2(event)">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5" for="visit-date">Preferred Date</label>
+              <input id="visit-date" type="date" required
+                class="input-field w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Preferred Time Slot</label>
+              <div id="time-slots" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <!-- filled by JS -->
+              </div>
+              <input type="hidden" id="visit-time" required />
+              <p id="time-error" class="hidden text-xs text-red-600 mt-2">Please select a time slot</p>
+            </div>
+            <div class="flex gap-3 pt-1">
+              <button type="button" onclick="goToBookingStep(1)" class="flex-1 py-3.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition">
+                Back
+              </button>
+              <button type="submit" class="btn-primary flex-[1.4] py-3.5 rounded-xl bg-navy-800 hover:bg-navy-700 text-white font-semibold text-sm shadow-md">
+                Continue to Payment
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- STEP 3: Payment -->
+        <div id="booking-step-3" class="booking-step hidden">
+          <h2 class="font-display text-lg font-bold text-navy-900 mb-1">Payment</h2>
+          <p class="text-sm text-slate-500 mb-6">Secure checkout for your expert visit</p>
+
+          <!-- Fee breakdown -->
+          <div class="rounded-xl bg-navy-50 border border-navy-100 p-4 mb-6">
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <p class="font-semibold text-navy-900 text-sm">On-Site Expert Visit</p>
+                <p class="text-xs text-slate-500 mt-0.5">Inspection · Budget estimation · Area assessment</p>
+              </div>
+              <p class="font-display font-bold text-navy-900 text-lg">₹199</p>
+            </div>
+            <div class="border-t border-navy-100 pt-3 flex justify-between items-center">
+              <span class="text-sm font-medium text-slate-600">Total payable</span>
+              <span class="font-display text-xl font-bold text-navy-900">₹199</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-2">Flat fee. No hidden charges for the visit. Work quote shared after inspection.</p>
+          </div>
+
+          <!-- Summary -->
+          <div class="rounded-xl border border-slate-200 p-4 mb-6 space-y-2 text-sm">
+            <div class="flex justify-between gap-2">
+              <span class="text-slate-500">Service</span>
+              <span id="pay-summary-service" class="font-medium text-navy-900 text-right">—</span>
+            </div>
+            <div class="flex justify-between gap-2">
+              <span class="text-slate-500">Address</span>
+              <span id="pay-summary-address" class="font-medium text-navy-900 text-right max-w-[60%]">—</span>
+            </div>
+            <div class="flex justify-between gap-2">
+              <span class="text-slate-500">Visit slot</span>
+              <span id="pay-summary-slot" class="font-medium text-navy-900 text-right">—</span>
+            </div>
+          </div>
+
+          <form id="form-step-3" class="space-y-4" onsubmit="submitStep3(event)">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Payment Method</label>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3.5 rounded-xl border border-navy-300 bg-navy-50/50 cursor-pointer">
+                  <input type="radio" name="pay-method" value="upi" checked class="accent-navy-800 w-4 h-4" />
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-navy-900">UPI</p>
+                    <p class="text-xs text-slate-500">GPay, PhonePe, Paytm & more</p>
+                  </div>
+                  <span class="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">Popular</span>
+                </label>
+                <label class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer">
+                  <input type="radio" name="pay-method" value="card" class="accent-navy-800 w-4 h-4" />
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-navy-900">Debit / Credit Card</p>
+                    <p class="text-xs text-slate-500">Visa, Mastercard, RuPay</p>
+                  </div>
+                </label>
+                <label class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 cursor-pointer">
+                  <input type="radio" name="pay-method" value="netbanking" class="accent-navy-800 w-4 h-4" />
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-navy-900">Net Banking</p>
+                    <p class="text-xs text-slate-500">All major Indian banks</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Card fields (shown when card selected) -->
+            <div id="card-fields" class="hidden space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1" for="card-number">Card Number</label>
+                <input id="card-number" type="text" inputmode="numeric" maxlength="19" placeholder="XXXX XXXX XXXX XXXX"
+                  class="input-field w-full px-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 mb-1" for="card-expiry">Expiry</label>
+                  <input id="card-expiry" type="text" placeholder="MM/YY" maxlength="5"
+                    class="input-field w-full px-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 mb-1" for="card-cvv">CVV</label>
+                  <input id="card-cvv" type="password" inputmode="numeric" maxlength="4" placeholder="•••"
+                    class="input-field w-full px-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm" />
+                </div>
+              </div>
+            </div>
+
+            <!-- UPI field -->
+            <div id="upi-fields" class="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1" for="upi-id">UPI ID</label>
+                <input id="upi-id" type="text" placeholder="yourname@upi"
+                  class="input-field w-full px-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm" />
+              </div>
+            </div>
+
+            <div class="flex gap-3 pt-1">
+              <button type="button" onclick="goToBookingStep(2)" class="flex-1 py-3.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition">
+                Back
+              </button>
+              <button type="submit" id="pay-btn" class="btn-primary flex-[1.4] py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-navy-950 font-bold text-sm shadow-md">
+                Pay ₹199
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- STEP 4 is on success screen -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SUCCESS SCREEN ========== -->
+  <div id="screen-success" class="screen min-h-screen gradient-mesh">
+    <div class="max-w-lg mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      <div class="bg-white rounded-2xl sm:rounded-3xl shadow-card border border-slate-100 p-6 sm:p-10 text-center">
+        <div class="success-check mx-auto w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
+          <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+          </svg>
+        </div>
+        <h1 class="font-display text-2xl sm:text-3xl font-bold text-navy-900 mb-2">Booking Confirmed!</h1>
+        <p class="text-slate-500 text-sm sm:text-base mb-2">Your on-site expert visit is scheduled.</p>
+        <p class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full mb-8">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          Payment of ₹199 successful
+        </p>
+
+        <div class="text-left rounded-xl border border-slate-200 overflow-hidden mb-6">
+          <div class="bg-navy-900 text-white px-4 py-3 flex items-center justify-between">
+            <span class="text-sm font-medium">Booking ID</span>
+            <span id="conf-id" class="font-display font-bold text-amber-400 tracking-wide">MH-XXXXXX</span>
+          </div>
+          <div class="p-4 space-y-3 text-sm">
+            <div class="flex justify-between gap-3">
+              <span class="text-slate-500">Service</span>
+              <span id="conf-service" class="font-medium text-navy-900 text-right">—</span>
+            </div>
+            <div class="flex justify-between gap-3">
+              <span class="text-slate-500">Visit date & time</span>
+              <span id="conf-slot" class="font-medium text-navy-900 text-right">—</span>
+            </div>
+            <div class="flex justify-between gap-3">
+              <span class="text-slate-500">Property</span>
+              <span id="conf-address" class="font-medium text-navy-900 text-right max-w-[55%]">—</span>
+            </div>
+            <div class="flex justify-between gap-3">
+              <span class="text-slate-500">Property type</span>
+              <span id="conf-type" class="font-medium text-navy-900 text-right">—</span>
+            </div>
+            <div class="flex justify-between gap-3 border-t border-slate-100 pt-3">
+              <span class="text-slate-500">Amount paid</span>
+              <span class="font-display font-bold text-navy-900">₹199</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-xl bg-amber-50 border border-amber-100 p-4 text-left mb-8">
+          <p class="text-xs font-semibold text-amber-800 mb-1">What's next?</p>
+          <ul class="text-xs text-amber-900/80 space-y-1 list-disc list-inside">
+            <li>You'll receive SMS & email confirmation shortly</li>
+            <li>Our expert will call before arriving</li>
+            <li>Keep access to the property ready for inspection</li>
+          </ul>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button type="button" onclick="navigate('home')" class="btn-primary flex-1 py-3.5 rounded-xl bg-navy-800 hover:bg-navy-700 text-white font-semibold text-sm shadow-md">
+            Back to Home
+          </button>
+          <button type="button" onclick="window.print()" class="flex-1 py-3.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition">
+            Print Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SERVICE DETAIL MODAL ========== -->
+  <div id="service-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop absolute inset-0 bg-navy-950/50 backdrop-blur-sm" onclick="closeServiceModal()"></div>
+    <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-4 pointer-events-none">
+      <div class="modal-panel pointer-events-auto w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white/95 backdrop-blur border-b border-slate-100 px-5 py-4 flex items-center justify-between rounded-t-3xl z-10">
+          <h2 id="modal-title" class="font-display font-bold text-navy-900 text-lg pr-4">Service</h2>
+          <button type="button" onclick="closeServiceModal()" class="p-2 rounded-xl hover:bg-slate-100 text-slate-500" aria-label="Close">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="p-5 sm:p-6">
+          <div id="modal-icon" class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"></div>
+          <p id="modal-tagline" class="text-sm font-medium text-amber-700 mb-2"></p>
+          <p id="modal-desc" class="text-sm text-slate-600 leading-relaxed mb-5"></p>
+
+          <div class="mb-5">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Includes</p>
+            <ul id="modal-includes" class="space-y-2"></ul>
+          </div>
+
+          <div class="rounded-xl bg-navy-50 border border-navy-100 p-4 mb-6 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold text-navy-900">On-Site Expert Visit</p>
+              <p class="text-xs text-slate-500">Inspection, estimate & assessment</p>
+            </div>
+            <div class="text-right">
+              <p class="font-display text-2xl font-bold text-navy-900">₹199</p>
+              <p class="text-[10px] text-slate-500">flat fee</p>
+            </div>
+          </div>
+
+          <button type="button" onclick="startBooking()" class="btn-primary w-full py-4 rounded-xl bg-navy-800 hover:bg-navy-700 text-white font-semibold text-sm shadow-md flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+            </svg>
+            Book On-Site Expert Visit
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== LOCATION PICKER MODAL ========== -->
+  <div id="location-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop absolute inset-0 bg-navy-950/50 backdrop-blur-sm" onclick="closeLocationPicker()"></div>
+    <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-4 pointer-events-none">
+      <div class="modal-panel pointer-events-auto w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 sm:p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-display font-bold text-navy-900 text-lg">Select Location</h2>
+          <button type="button" onclick="closeLocationPicker()" class="p-2 rounded-xl hover:bg-slate-100 text-slate-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="space-y-2" id="location-list">
+          <!-- filled by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Bookings Modal -->
+  <div id="bookings-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop absolute inset-0 bg-navy-950/50 backdrop-blur-sm" onclick="closeBookingsModal()"></div>
+    <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-4 pointer-events-none">
+      <div class="modal-panel pointer-events-auto w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+          <h2 class="font-display font-bold text-navy-900 text-lg">My Bookings</h2>
+          <button type="button" onclick="closeBookingsModal()" class="p-2 rounded-xl hover:bg-slate-100 text-slate-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div id="bookings-list" class="p-4 overflow-y-auto space-y-3">
+          <p class="text-sm text-slate-500 text-center py-8">Loading…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] hidden px-4 py-2.5 rounded-xl bg-navy-900 text-white text-sm font-medium shadow-lg max-w-[90vw]"></div>
+
+  <script src="js/runtime-config.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    /* ========== STATE ========== */
+    const state = {
+      authMode: 'signup',
+      user: null,
+      location: 'Hyderabad, Telangana',
+      selectedService: null,
+      bookingStep: 1,
+      booking: {
+        address: '',
+        city: '',
+        pincode: '',
+        propertyType: '',
+        notes: '',
+        date: '',
+        time: '',
+        paymentMethod: 'upi',
+        bookingId: '',
+      },
+    };
+
+    const SERVICES = [
+      {
+        id: 'complete-house',
+        name: 'Complete House Building',
+        short: 'Turnkey construction from plan to handover',
+        tagline: 'New construction',
+        category: 'build',
+        color: 'bg-navy-100 text-navy-800',
+        iconBg: 'bg-navy-100',
+        iconColor: 'text-navy-800',
+        desc: 'End-to-end house construction with expert planning, structural work, and quality finishing. Ideal for new builds on plots or redevelopment projects.',
+        includes: [
+          'Site survey & feasibility assessment',
+          'Structural & layout consultation',
+          'Budget estimation for full build',
+          'Material & timeline guidance',
+        ],
+        icon: `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"/></svg>`,
+      },
+      {
+        id: 'tiles-flooring',
+        name: 'Tiles & Flooring Work',
+        short: 'Premium flooring, tiles & marble installation',
+        tagline: 'Build & repair',
+        category: 'both',
+        color: 'bg-sky-100 text-sky-800',
+        iconBg: 'bg-sky-100',
+        iconColor: 'text-sky-800',
+        desc: 'Professional tile laying, marble/granite work, vinyl & wooden flooring for new homes or renovations. We assess subfloor, material needs, and finish quality.',
+        includes: [
+          'Floor condition assessment',
+          'Material quantity estimate',
+          'Design & layout suggestions',
+          'Labour & cost breakdown',
+        ],
+        icon: `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>`,
+      },
+      {
+        id: 'painting',
+        name: 'Home Painting / Color Work',
+        short: 'Interior & exterior painting professionals',
+        tagline: 'Build & repair',
+        category: 'both',
+        color: 'bg-violet-100 text-violet-800',
+        iconBg: 'bg-violet-100',
+        iconColor: 'text-violet-800',
+        desc: 'Interior and exterior painting with surface prep guidance, color consultation, and durable finishes. Perfect for new homes or refreshing existing walls.',
+        includes: [
+          'Wall condition inspection',
+          'Paint type & quantity estimate',
+          'Color & finish recommendations',
+          'Labour & materials quote',
+        ],
+        icon: `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/></svg>`,
+      },
+      {
+        id: 'plumbing',
+        name: 'Plumbing Services',
+        short: 'Leaks, fittings, bathrooms & pipelines',
+        tagline: 'Repairs & installs',
+        category: 'repair',
+        color: 'bg-cyan-100 text-cyan-800',
+        iconBg: 'bg-cyan-100',
+        iconColor: 'text-cyan-800',
+        desc: 'Expert plumbing for leaks, blockages, bathroom fittings, water tanks, and new pipeline layouts. Fast diagnosis and transparent repair quotes.',
+        includes: [
+          'Leak & pressure diagnosis',
+          'Fixture & pipe assessment',
+          'Repair vs replace advice',
+          'Itemized service estimate',
+        ],
+        icon: `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>`,
+      },
+      {
+        id: 'electrical',
+        name: 'Electrical Services',
+        short: 'Wiring, switches, lighting & safety checks',
+        tagline: 'Repairs & installs',
+        category: 'repair',
+        color: 'bg-amber-100 text-amber-800',
+        iconBg: 'bg-amber-100',
+        iconColor: 'text-amber-800',
+        desc: 'Safe electrical work including wiring, DB panels, switches, lighting, and load assessment. Ideal for new installations or fixing faults in existing homes.',
+        includes: [
+          'Safety & load assessment',
+          'Wiring & fixture inspection',
+          'Upgrade recommendations',
+          'Transparent labour estimate',
+        ],
+        icon: `<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>`,
+      },
+    ];
+
+    const TIME_SLOTS = [
+      '09:00 AM', '10:00 AM', '11:00 AM',
+      '12:00 PM', '02:00 PM', '03:00 PM',
+      '04:00 PM', '05:00 PM', '06:00 PM',
+    ];
+
+    const LOCATIONS = [
+      'Hyderabad, Telangana',
+      'Bengaluru, Karnataka',
+      'Chennai, Tamil Nadu',
+      'Mumbai, Maharashtra',
+      'Pune, Maharashtra',
+      'Delhi NCR',
+      'Ahmedabad, Gujarat',
+      'Kolkata, West Bengal',
+    ];
+
+    /* ========== ROUTING ========== */
+    function navigate(screen) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('screen-' + screen);
+      if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+      }
+      closeProfileMenu();
+      closeServiceModal();
+      closeLocationPicker();
+    }
+
+    /* ========== AUTH ========== */
+    function setAuthMode(mode) {
+      state.authMode = mode;
+      const isSignup = mode === 'signup';
+      const tabSignup = document.getElementById('tab-signup');
+      const tabLogin = document.getElementById('tab-login');
+      const signupFields = document.getElementById('signup-fields');
+      const title = document.getElementById('auth-title');
+      const subtitle = document.getElementById('auth-subtitle');
+      const submit = document.getElementById('auth-submit');
+      const err = document.getElementById('auth-error');
+
+      err.classList.add('hidden');
+      err.textContent = '';
+
+      if (isSignup) {
+        tabSignup.className = 'auth-toggle-btn flex-1 py-2.5 rounded-xl text-sm font-semibold bg-navy-800 text-white shadow-sm';
+        tabLogin.className = 'auth-toggle-btn flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:text-navy-800';
+        signupFields.classList.remove('hidden');
+        title.textContent = 'Create your account';
+        subtitle.textContent = 'Join Manam Homes to book expert visits';
+        submit.textContent = 'Create Account';
+        document.getElementById('auth-name').required = true;
+        document.getElementById('auth-phone').required = true;
+      } else {
+        tabLogin.className = 'auth-toggle-btn flex-1 py-2.5 rounded-xl text-sm font-semibold bg-navy-800 text-white shadow-sm';
+        tabSignup.className = 'auth-toggle-btn flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:text-navy-800';
+        signupFields.classList.add('hidden');
+        title.textContent = 'Welcome back';
+        subtitle.textContent = 'Log in to manage bookings & services';
+        submit.textContent = 'Log In';
+        document.getElementById('auth-name').required = false;
+        document.getElementById('auth-phone').required = false;
+      }
+    }
+
+    function togglePassword() {
+      const input = document.getElementById('auth-password');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    async function handleAuth(e) {
+      e.preventDefault();
+      const err = document.getElementById('auth-error');
+      err.classList.add('hidden');
+
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const name = document.getElementById('auth-name').value.trim();
+      const phone = document.getElementById('auth-phone').value.trim().replace(/\s/g, '');
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showAuthError('Please enter a valid email address.');
+        return;
+      }
+      if (!password || password.length < 6) {
+        showAuthError('Password must be at least 6 characters.');
+        return;
+      }
+      if (state.authMode === 'signup') {
+        if (!name || name.length < 2) {
+          showAuthError('Please enter your full name.');
+          return;
+        }
+        if (!phone || phone.length < 10) {
+          showAuthError('Please enter a valid 10-digit phone number.');
+          return;
+        }
+      }
+
+      const submitBtn = document.getElementById('auth-submit');
+      const prevLabel = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = state.authMode === 'signup' ? 'Creating account…' : 'Logging in…';
+
+      try {
+        let data;
+        if (state.authMode === 'signup') {
+          data = await API.signup({
+            name,
+            email,
+            phone,
+            password,
+            location: state.location,
+          });
+        } else {
+          data = await API.login({ email, password });
+        }
+
+        applyUser(data.user);
+        showToast(state.authMode === 'signup' ? 'Account created successfully!' : 'Welcome back!');
+        navigate('home');
+      } catch (ex) {
+        showAuthError(ex.message || 'Authentication failed');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = prevLabel;
+      }
+    }
+
+    function applyUser(user) {
+      if (!user) return;
+      state.user = {
+        ...user,
+        initials: getInitials(user.name || user.email || 'U'),
+      };
+      if (user.location) state.location = user.location;
+      updateUserUI();
+    }
+
+    function showAuthError(msg) {
+      const err = document.getElementById('auth-error');
+      err.textContent = msg;
+      err.classList.remove('hidden');
+    }
+
+    function getInitials(name) {
+      return name.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join('') || 'U';
+    }
+
+    function updateUserUI() {
+      if (!state.user) return;
+      document.getElementById('user-avatar').textContent = state.user.initials;
+      document.getElementById('profile-name').textContent = state.user.name;
+      document.getElementById('profile-email').textContent = state.user.email;
+      document.getElementById('user-location').textContent = state.location;
+    }
+
+    function logout() {
+      API.clearSession();
+      state.user = null;
+      document.getElementById('auth-form').reset();
+      setAuthMode('login');
+      navigate('auth');
+      showToast('Logged out successfully');
+    }
+
+    async function restoreSession() {
+      const token = API.getToken();
+      const cached = API.getStoredUser();
+      if (!token) {
+        navigate('auth');
+        return false;
+      }
+      if (cached) applyUser(cached);
+      try {
+        const data = await API.me();
+        applyUser(data.user);
+        navigate('home');
+        return true;
+      } catch {
+        API.clearSession();
+        state.user = null;
+        navigate('auth');
+        return false;
+      }
+    }
+
+    /* ========== PROFILE & LOCATION ========== */
+    function toggleProfileMenu() {
+      const menu = document.getElementById('profile-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    function closeProfileMenu() {
+      document.getElementById('profile-menu')?.classList.add('hidden');
+    }
+
+    function openLocationPicker() {
+      const list = document.getElementById('location-list');
+      list.innerHTML = LOCATIONS.map(loc => {
+        const selected = loc === state.location;
+        return `
+          <button type="button" onclick="selectLocation('${loc.replace(/'/g, "\\'")}')"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm transition ${selected ? 'bg-navy-50 border border-navy-200 text-navy-900 font-semibold' : 'hover:bg-slate-50 border border-transparent text-slate-700'}">
+            <svg class="w-4 h-4 ${selected ? 'text-amber-600' : 'text-slate-400'} shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+            </svg>
+            ${loc}
+            ${selected ? '<svg class="w-4 h-4 text-navy-700 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>' : ''}
+          </button>`;
+      }).join('');
+      document.getElementById('location-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLocationPicker() {
+      document.getElementById('location-modal')?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    async function selectLocation(loc) {
+      state.location = loc;
+      document.getElementById('user-location').textContent = loc;
+      closeLocationPicker();
+      try {
+        if (API.getToken()) {
+          const data = await API.updateLocation(loc);
+          applyUser(data.user);
+        }
+        showToast('Location updated');
+      } catch (ex) {
+        showToast(ex.message || 'Could not save location');
+      }
+    }
+
+    async function openBookingsModal() {
+      closeProfileMenu();
+      document.getElementById('bookings-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      const list = document.getElementById('bookings-list');
+      list.innerHTML = '<p class="text-sm text-slate-500 text-center py-8">Loading…</p>';
+      try {
+        const data = await API.listBookings();
+        const bookings = data.bookings || [];
+        if (!bookings.length) {
+          list.innerHTML = '<p class="text-sm text-slate-500 text-center py-8">No bookings yet. Book a ₹199 expert visit to get started.</p>';
+          return;
+        }
+        list.innerHTML = bookings.map(b => `
+          <div class="rounded-xl border border-slate-200 p-4 text-left">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <p class="font-semibold text-navy-900 text-sm">${escapeHtml(b.serviceName)}</p>
+              <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">${escapeHtml(b.status)}</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-1"><span class="font-medium text-slate-600">${escapeHtml(b.bookingCode)}</span></p>
+            <p class="text-xs text-slate-600">${escapeHtml(formatDisplayDate(b.visitDate))} · ${escapeHtml(b.visitTime)}</p>
+            <p class="text-xs text-slate-500 mt-1 truncate">${escapeHtml(b.address)}, ${escapeHtml(b.city)}</p>
+            <p class="text-xs font-semibold text-navy-800 mt-2">${escapeHtml(b.amountDisplay || '₹199')} · ${escapeHtml(b.paymentStatus)}</p>
+          </div>
+        `).join('');
+      } catch (ex) {
+        list.innerHTML = `<p class="text-sm text-red-600 text-center py-8">${escapeHtml(ex.message || 'Failed to load')}</p>`;
+      }
+    }
+
+    function closeBookingsModal() {
+      document.getElementById('bookings-modal')?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /* ========== SERVICES ========== */
+    function renderServices() {
+      const grid = document.getElementById('services-grid');
+      grid.innerHTML = SERVICES.map(s => `
+        <button type="button" onclick="openServiceModal('${s.id}')"
+          class="service-card text-left p-5 sm:p-6 rounded-2xl bg-white border border-slate-100 shadow-card hover:border-navy-200 group">
+          <div class="w-14 h-14 rounded-2xl ${s.iconBg} ${s.iconColor} flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+            ${s.icon}
+          </div>
+          <span class="inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md ${s.color} mb-2">${s.tagline}</span>
+          <h3 class="font-display font-bold text-navy-900 text-base sm:text-lg mb-1.5 group-hover:text-navy-700">${s.name}</h3>
+          <p class="text-sm text-slate-500 leading-relaxed mb-4">${s.short}</p>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-navy-700">From visit ₹199</span>
+            <span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 group-hover:gap-2 transition-all">
+              View details
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+            </span>
+          </div>
+        </button>
+      `).join('');
+    }
+
+    function openServiceModal(id) {
+      const s = SERVICES.find(x => x.id === id);
+      if (!s) return;
+      state.selectedService = s;
+      document.getElementById('modal-title').textContent = s.name;
+      document.getElementById('modal-tagline').textContent = s.tagline;
+      document.getElementById('modal-desc').textContent = s.desc;
+      document.getElementById('modal-icon').className = `w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${s.iconBg} ${s.iconColor}`;
+      document.getElementById('modal-icon').innerHTML = s.icon;
+      document.getElementById('modal-includes').innerHTML = s.includes.map(item => `
+        <li class="flex items-start gap-2 text-sm text-slate-600">
+          <svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          ${item}
+        </li>
+      `).join('');
+      document.getElementById('service-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeServiceModal() {
+      document.getElementById('service-modal')?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    /* ========== BOOKING FLOW ========== */
+    function startBooking() {
+      if (!state.selectedService) return;
+      closeServiceModal();
+      resetBooking();
+      document.getElementById('booking-service-label').textContent = state.selectedService.name;
+      // Prefill city from location
+      const cityPart = state.location.split(',')[0].trim();
+      document.getElementById('addr-city').value = cityPart === 'Delhi NCR' ? 'Delhi' : cityPart;
+      goToBookingStep(1);
+      navigate('booking');
+    }
+
+    function resetBooking() {
+      state.booking = {
+        address: '', city: '', pincode: '', propertyType: '', notes: '',
+        date: '', time: '', paymentMethod: 'upi', bookingId: '',
+      };
+      document.getElementById('form-step-1')?.reset();
+      document.getElementById('form-step-2')?.reset();
+      document.getElementById('visit-time').value = '';
+      document.getElementById('time-error')?.classList.add('hidden');
+      // Reset payment radios
+      const upiRadio = document.querySelector('input[name="pay-method"][value="upi"]');
+      if (upiRadio) upiRadio.checked = true;
+      updatePaymentFields();
+      // Min date = tomorrow
+      const dateInput = document.getElementById('visit-date');
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const max = new Date();
+      max.setDate(max.getDate() + 30);
+      dateInput.min = formatDateISO(tomorrow);
+      dateInput.max = formatDateISO(max);
+      dateInput.value = '';
+      renderTimeSlots();
+    }
+
+    function formatDateISO(d) {
+      return d.toISOString().split('T')[0];
+    }
+
+    function goToBookingStep(step) {
+      state.bookingStep = step;
+      document.querySelectorAll('.booking-step').forEach(el => el.classList.add('hidden'));
+      const panel = document.getElementById('booking-step-' + step);
+      if (panel) panel.classList.remove('hidden');
+
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById('step-dot-' + i);
+        if (!dot) continue;
+        if (i < step) {
+          dot.className = 'step-dot w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-emerald-500 text-white';
+          dot.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>`;
+        } else if (i === step) {
+          dot.className = 'step-dot w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-navy-800 text-white';
+          dot.textContent = String(i);
+        } else {
+          dot.className = 'step-dot w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-slate-200 text-slate-500';
+          dot.textContent = String(i);
+        }
+      }
+      for (let i = 1; i <= 3; i++) {
+        const line = document.getElementById('step-line-' + i);
+        if (line) line.className = `step-line h-0.5 flex-1 mx-1 mb-5 ${i < step ? 'bg-emerald-400' : 'bg-slate-200'}`;
+      }
+
+      if (step === 2) renderTimeSlots();
+      if (step === 3) updatePaymentSummary();
+    }
+
+    function submitStep1(e) {
+      e.preventDefault();
+      state.booking.address = document.getElementById('addr-line').value.trim();
+      state.booking.city = document.getElementById('addr-city').value.trim();
+      state.booking.pincode = document.getElementById('addr-pincode').value.trim();
+      state.booking.propertyType = document.getElementById('addr-type').value;
+      state.booking.notes = document.getElementById('addr-notes').value.trim();
+      goToBookingStep(2);
+    }
+
+    function renderTimeSlots() {
+      const container = document.getElementById('time-slots');
+      const selected = state.booking.time || document.getElementById('visit-time').value;
+      container.innerHTML = TIME_SLOTS.map(slot => `
+        <button type="button" class="time-slot px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 ${selected === slot ? 'selected' : ''}"
+          onclick="selectTimeSlot('${slot}')">${slot}</button>
+      `).join('');
+    }
+
+    function selectTimeSlot(slot) {
+      state.booking.time = slot;
+      document.getElementById('visit-time').value = slot;
+      document.getElementById('time-error').classList.add('hidden');
+      renderTimeSlots();
+    }
+
+    function submitStep2(e) {
+      e.preventDefault();
+      const date = document.getElementById('visit-date').value;
+      const time = document.getElementById('visit-time').value;
+      if (!date) return;
+      if (!time) {
+        document.getElementById('time-error').classList.remove('hidden');
+        return;
+      }
+      state.booking.date = date;
+      state.booking.time = time;
+      goToBookingStep(3);
+    }
+
+    function updatePaymentSummary() {
+      const s = state.selectedService;
+      document.getElementById('pay-summary-service').textContent = s ? s.name : '—';
+      document.getElementById('pay-summary-address').textContent =
+        `${state.booking.address}, ${state.booking.city} ${state.booking.pincode}`;
+      document.getElementById('pay-summary-slot').textContent =
+        `${formatDisplayDate(state.booking.date)} · ${state.booking.time}`;
+    }
+
+    function formatDisplayDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso + 'T12:00:00');
+      return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function updatePaymentFields() {
+      const method = document.querySelector('input[name="pay-method"]:checked')?.value || 'upi';
+      state.booking.paymentMethod = method;
+      document.getElementById('card-fields').classList.toggle('hidden', method !== 'card');
+      document.getElementById('upi-fields').classList.toggle('hidden', method !== 'upi');
+    }
+
+    async function submitStep3(e) {
+      e.preventDefault();
+      const method = document.querySelector('input[name="pay-method"]:checked')?.value || 'upi';
+      state.booking.paymentMethod = method;
+
+      if (method === 'upi') {
+        const upi = document.getElementById('upi-id').value.trim();
+        if (!upi || !upi.includes('@')) {
+          showToast('Please enter a valid UPI ID (e.g. name@upi)');
+          return;
+        }
+      }
+      if (method === 'card') {
+        const num = document.getElementById('card-number').value.replace(/\s/g, '');
+        const exp = document.getElementById('card-expiry').value.trim();
+        const cvv = document.getElementById('card-cvv').value.trim();
+        if (num.length < 12 || !exp || cvv.length < 3) {
+          showToast('Please complete card details');
+          return;
+        }
+      }
+
+      if (!API.getToken()) {
+        showToast('Please log in again to complete booking');
+        navigate('auth');
+        return;
+      }
+
+      const btn = document.getElementById('pay-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="inline-flex items-center gap-2"><svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Processing…</span>`;
+
+      try {
+        const s = state.selectedService;
+        const data = await API.createBooking({
+          serviceId: s.id,
+          serviceName: s.name,
+          address: state.booking.address,
+          city: state.booking.city,
+          pincode: state.booking.pincode,
+          propertyType: state.booking.propertyType,
+          notes: state.booking.notes || '',
+          visitDate: state.booking.date,
+          visitTime: state.booking.time,
+          paymentMethod: method,
+        });
+
+        state.booking.bookingId = data.booking.bookingCode;
+        goToBookingStep(4);
+        showSuccessScreen();
+      } catch (ex) {
+        showToast(ex.message || 'Payment / booking failed');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Pay ₹199';
+      }
+    }
+
+    function showSuccessScreen() {
+      const s = state.selectedService;
+      document.getElementById('conf-id').textContent = state.booking.bookingId;
+      document.getElementById('conf-service').textContent = s ? s.name : '—';
+      document.getElementById('conf-slot').textContent =
+        `${formatDisplayDate(state.booking.date)} · ${state.booking.time}`;
+      document.getElementById('conf-address').textContent =
+        `${state.booking.address}, ${state.booking.city} – ${state.booking.pincode}`;
+      document.getElementById('conf-type').textContent = state.booking.propertyType || '—';
+      navigate('success');
+    }
+
+    function goBackFromBooking() {
+      if (state.bookingStep > 1 && state.bookingStep < 4) {
+        goToBookingStep(state.bookingStep - 1);
+      } else {
+        navigate('home');
+      }
+    }
+
+    /* ========== TOAST ========== */
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.add('hidden'), 2800);
+    }
+
+    /* ========== CARD FORMATTING ========== */
+    document.addEventListener('input', (e) => {
+      if (e.target.id === 'card-number') {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 16);
+        e.target.value = v.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+      }
+      if (e.target.id === 'card-expiry') {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 4);
+        if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
+        e.target.value = v;
+      }
+    });
+
+    document.addEventListener('change', (e) => {
+      if (e.target.name === 'pay-method') updatePaymentFields();
+    });
+
+    /* ========== GLOBAL CLICKS ========== */
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('profile-menu');
+      const btn = document.getElementById('profile-btn');
+      if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && !btn.contains(e.target)) {
+        closeProfileMenu();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeServiceModal();
+        closeLocationPicker();
+        closeProfileMenu();
+        closeBookingsModal();
+      }
+    });
+
+    /* ========== INIT ========== */
+    async function init() {
+      renderServices();
+      setAuthMode('signup');
+      // Restore JWT session if present; otherwise stay on auth
+      if (API.getToken()) {
+        await restoreSession();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

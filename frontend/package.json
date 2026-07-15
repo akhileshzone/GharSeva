@@ -1,0 +1,10 @@
+{
+  "name": "ghar-seva-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node inject-config.js",
+    "inject": "node inject-config.js"
+  }
+}

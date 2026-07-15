@@ -1,0 +1,20 @@
+# Netlify — static frontend for Ghar Seva
+# Site settings → Environment variables:
+#   API_BASE_URL = https://your-api.onrender.com
+
+[build]
+  publish = "."
+  # Injects API URL into config at build time (optional; falls back to js/config.js)
+  command = "node ./inject-config.js"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
