@@ -105,7 +105,7 @@ npm start
 |-----|--------|
 | `DATABASE_URL` | Internal Database URL from Postgres |
 | `JWT_SECRET` | Long random string (32+ chars) |
-| `CORS_ORIGINS` | Your Netlify URL |
+| `CORS_ORIGINS` | `https://charming-horse-0b7ee8.netlify.app` |
 | `NODE_ENV` | `production` |
 
 4. Build / start as above.
